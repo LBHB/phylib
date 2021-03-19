@@ -381,7 +381,8 @@ class TemplateModel(object):
         self.n_channels = nc = self.channel_mapping.shape[0]
         if self.n_channels_dat:
             assert np.all(self.channel_mapping <= self.n_channels_dat - 1)
-
+        self.channel_labels = self._load_channel_labels()
+        
         # Channel positions.
         self.channel_positions = self._load_channel_positions()
         assert self.channel_positions.shape == (nc, 2)
@@ -524,6 +525,16 @@ class TemplateModel(object):
 
     def _load_channel_map(self):
         path = self._find_path('channel_map.npy', 'channels.rawInd*.npy')
+        out = self._read_array(path)
+        out = np.atleast_1d(out)
+        assert out.ndim == 1
+        assert out.dtype in (np.uint32, np.int32, np.int64)
+        return out
+
+    def _load_channel_labels(self):
+        path = self._find_path('channel_labels.npy', mandatory=False)
+        if path is None:
+            return None
         out = self._read_array(path)
         out = np.atleast_1d(out)
         assert out.ndim == 1
