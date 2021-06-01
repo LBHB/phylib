@@ -101,12 +101,19 @@ def from_sparse(data, cols, channel_ids):
     out_shape = shape
     # The channel dimension contains the number of requested channels.
     # The last column contains irrelevant values.
+    
     out_shape[channel_axis] = n_channels + 1
     out = np.zeros(out_shape, dtype=data.dtype)
     x = np.tile(np.arange(n_spikes)[:, np.newaxis],
                 (1, n_channels_loc))
     assert x.shape == cols_loc.shape == data.shape[:2]
-    out[x, cols_loc, ...] = data
+    if n_channels_loc > n_channels:
+        # If there are fewer templates (n_channels here) than the number of 
+        # mapping indicies (32 for template projections by KiloSort), 
+        # limit the indexing to avoid an incorrect mapping
+        out[x[:, :n_channels, ...], cols_loc[:, :n_channels, ...], ...] = data[:, :n_channels, ...]
+    else:
+        out[x, cols_loc, ...] = data
     # Remove the last column with values outside the specified
     # channels.
     out = out[:, :-1, ...]
